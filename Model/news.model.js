@@ -10,7 +10,10 @@ const newsSchema = mongoose.Schema({
         type: String,
         require: true,
     },
-    newsCommit: [{
+    newsComment: [{
+        date: {
+            type: String,
+        },
         text: {
             type : String,
             required: true

@@ -1,14 +1,23 @@
 const User = require("../Model/user.model");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+
 module.exports.userController = {
-  adduser: async (res, req) => {
+  adduser: async (req, res) => {
     try {
+      const hash = await bcrypt.hash(
+        req.body.password,
+        Number(process.env.BCRYPT_ROUNDS)
+      );
       const user = await User.create({
-        name: req.body.name,
-        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        login: req.body.login,
+        password: hash
       });
       res.json(user);
     } catch (error) {
-      res.json(error.messenge);
+      res.json(error.message);
     }
   },
   deleteUser: async (req, res) => {
@@ -19,4 +28,35 @@ module.exports.userController = {
       res.json(error.messenge);
     }
   },
+  login: async (req, res) => {
+    try {
+      const candidate = await User.findOne({ login: req.body.login });
+      if(!candidate){
+        return await res.status(401).json({error: "неверный логин"});
+      }
+      const valid = await bcrypt.compare(req.body.password, candidate.password);
+       if(!valid){
+         return await res.status(401).json({error: "неверный пароль"});
+       }
+       const payload = {
+        id: candidate._id,
+       }
+       const token =  await jwt.sign(payload, process.env.SECRET_JWT_KEY, {
+         expiresIn: '7d'
+        })
+       res.json({token})
+    } catch (error) {
+      res.json(error.message);
+    }
+  },
+  getUser: async (req, res ) => {
+    try {
+      const user = await User.find()
+      res.json(user)
+    } catch (error) {
+      res.json(error.message);
+      
+    }
+  }
+  
 };

@@ -3,17 +3,19 @@ const News = require("../Model/news.model");
 module.exports.commentController = {
   addComment: async (req, res) => {
     try {
-      const comment = await News.findByIdAndUpdate(req.params.id, {
+      await News.findByIdAndUpdate(req.params.id, {
         $push: {
           newsComment: {
+            date: new Date().toDateString(),
             text: req.body.text,
-            userId: req.body.userId,
+            commentUserId: req.user.id,
           },
         },
       });
-      res.json(comment);
+      const item = await News.findById(req.params.id).populate("newsComment");
+      res.json(item);
     } catch (error) {
-      res.json(error.messenge);
+      res.json(error.message);
     } // добавление комминтария
   },
   deleteComment: async (req, res) => {
@@ -27,7 +29,7 @@ module.exports.commentController = {
       });
       res.json("deleted");
     } catch (error) {
-      res.json(error.messenge);
+      res.json(error.message);
     }
   },
 };
